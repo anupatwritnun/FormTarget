@@ -24,7 +24,7 @@ const GoalSettingForm = () => {
     useEffect(() => {
         const initLiff = async () => {
             try {
-                await liff.init({ liffId: 'YOUR_LIFF_ID' }); // Replace with your LIFF ID
+                await liff.init({ liffId: '2008652706-S7IUJtOr' });
                 if (liff.isLoggedIn()) {
                     const profile = await liff.getProfile();
                     setUserId(profile.userId);
@@ -202,8 +202,8 @@ const GoalSettingForm = () => {
                             <div
                                 onClick={() => handleGoalSourceChange('standard')}
                                 className={`goal-card p-4 rounded-xl border-2 cursor-pointer ${goalSource === 'standard'
-                                        ? 'selected border-orange-400'
-                                        : 'border-gray-200 bg-white hover:border-gray-300'
+                                    ? 'selected border-orange-400'
+                                    : 'border-gray-200 bg-white hover:border-gray-300'
                                     }`}
                             >
                                 <div className="flex items-start gap-3">
@@ -232,8 +232,8 @@ const GoalSettingForm = () => {
                             <div
                                 onClick={() => handleGoalSourceChange('doctor')}
                                 className={`goal-card p-4 rounded-xl border-2 cursor-pointer ${goalSource === 'doctor'
-                                        ? 'selected border-orange-400'
-                                        : 'border-gray-200 bg-white hover:border-gray-300'
+                                    ? 'selected border-orange-400'
+                                    : 'border-gray-200 bg-white hover:border-gray-300'
                                     }`}
                             >
                                 <div className="flex items-start gap-3">
@@ -282,8 +282,8 @@ const GoalSettingForm = () => {
                                         placeholder="135"
                                         disabled={goalSource === 'standard'}
                                         className={`w-full px-4 py-3 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-300 transition-all ${goalSource === 'standard'
-                                                ? 'bg-orange-50 text-orange-600 font-medium'
-                                                : 'bg-gray-100 focus:bg-white'
+                                            ? 'bg-orange-50 text-orange-600 font-medium'
+                                            : 'bg-gray-100 focus:bg-white'
                                             }`}
                                     />
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">mmHg</span>
@@ -299,8 +299,8 @@ const GoalSettingForm = () => {
                                         placeholder="85"
                                         disabled={goalSource === 'standard'}
                                         className={`w-full px-4 py-3 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-300 transition-all ${goalSource === 'standard'
-                                                ? 'bg-orange-50 text-orange-600 font-medium'
-                                                : 'bg-gray-100 focus:bg-white'
+                                            ? 'bg-orange-50 text-orange-600 font-medium'
+                                            : 'bg-gray-100 focus:bg-white'
                                             }`}
                                     />
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">mmHg</span>
@@ -426,8 +426,8 @@ const GoalSettingForm = () => {
                         type="submit"
                         disabled={isSubmitting}
                         className={`w-full py-4 rounded-xl text-white font-medium text-lg shadow-lg transition-all duration-200 ${isSubmitting
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 active:scale-[0.98] hover:shadow-xl'
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 active:scale-[0.98] hover:shadow-xl'
                             }`}
                     >
                         {isSubmitting ? (
