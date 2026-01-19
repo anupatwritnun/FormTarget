@@ -221,8 +221,15 @@
 
           if (response.ok) {
             setSubmitStatus('success');
-            // Close LIFF window after success
-            setTimeout(() => { if (liff.isInClient()) liff.closeWindow(); }, 1500);
+            // Close LIFF window after success (1 second delay to show success message)
+            setTimeout(() => {
+              if (liff.isInClient()) {
+                liff.closeWindow();
+              } else {
+                // Fallback for external browser
+                window.close();
+              }
+            }, 1000);
           } else {
             setSubmitStatus('error');
           }
