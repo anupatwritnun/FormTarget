@@ -3,6 +3,7 @@ import liff from '@line/liff';
 
 // Placeholder for n8n webhook URL
 const N8N_WEBHOOK_URL = 'https://n8n.srv1159869.hstgr.cloud/webhook/target';
+const N8N_PREFILL_URL = 'https://n8n.srv1159869.hstgr.cloud/webhook/showdatainform';
 
 // Mascot image - update to your actual path
 const MASCOT_IMAGE_URL = './Nurse.png';
@@ -23,6 +24,9 @@ const GoalSettingForm = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState(null);
     const [isBodyExpanded, setIsBodyExpanded] = useState(false);
+    // Loading and saved data states
+    const [isLoading, setIsLoading] = useState(false);
+    const [savedData, setSavedData] = useState(null);
 
     // Initialize LIFF and get user profile
     useEffect(() => {
@@ -42,6 +46,52 @@ const GoalSettingForm = () => {
         };
         initLiff();
     }, []);
+
+    // Fetch existing data when userId is available
+    useEffect(() => {
+        if (!userId) return;
+
+        const fetchExistingData = async () => {
+            setIsLoading(true);
+            try {
+                const response = await fetch(`${N8N_PREFILL_URL}?userId=${userId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Fetched existing data:', data);
+
+                    // Save the fetched data for display
+                    setSavedData(data);
+
+                    // Map API response to form fields (only if values exist)
+                    if (data.bp_systolic_target) {
+                        setBpSys(String(data.bp_systolic_target));
+                        if (data.bp_systolic_target !== 135 || data.bp_diastolic_target !== 85) {
+                            setGoalSource('doctor');
+                        }
+                    }
+                    if (data.bp_diastolic_target) {
+                        setBpDia(String(data.bp_diastolic_target));
+                    }
+                    if (data.current_weight) {
+                        setCurrentWeight(String(data.current_weight));
+                    }
+                    if (data.current_height) {
+                        setCurrentHeight(String(data.current_height));
+                    }
+                    if (data.target_weight) {
+                        setTargetWeight(String(data.target_weight));
+                        setIsBodyExpanded(true);
+                    }
+                }
+            } catch (error) {
+                console.log('No existing data or fetch error:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchExistingData();
+    }, [userId]);
 
     // Handle goal source selection
     const handleGoalSourceChange = (source) => {
@@ -147,6 +197,31 @@ const GoalSettingForm = () => {
             setIsSubmitting(false);
         }
     };
+
+    // Show loading spinner while fetching data
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-[#FFF8F0] flex flex-col items-center justify-center font-['Kanit',sans-serif]">
+                <style>
+                    {`@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');`}
+                </style>
+                <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center overflow-hidden border-4 border-white mb-6">
+                    <img
+                        src={MASCOT_IMAGE_URL}
+                        alt="Pla-Thong Mascot"
+                        className="w-20 h-20 object-contain animate-pulse"
+                    />
+                </div>
+                <div className="flex items-center gap-3">
+                    <svg className="animate-spin h-6 w-6 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="text-gray-600 font-medium">กำลังโหลดข้อมูล...</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[#FFF8F0] font-['Kanit',sans-serif]">
@@ -305,6 +380,14 @@ const GoalSettingForm = () => {
                             <h2 className="text-lg font-medium text-gray-800">เป้าหมายความดันโลหิต</h2>
                         </div>
 
+                        {savedData?.bp_systolic_target && (
+                            <div className="bg-orange-50 rounded-lg p-3 mb-3 border border-orange-100">
+                                <p className="text-xs text-orange-600">
+                                    📌 ข้อมูลที่บันทึกไว้: <strong>{savedData.bp_systolic_target}/{savedData.bp_diastolic_target}</strong> mmHg
+                                </p>
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="block text-sm text-gray-500 mb-1.5">ตัวบน (Systolic)</label>
@@ -445,6 +528,14 @@ const GoalSettingForm = () => {
                                         <span className="w-2 h-2 bg-orange-400 rounded-full"></span>
                                         เป้าหมายของคุณ
                                     </p>
+                                    {savedData?.target_weight && (
+                                        <div className="bg-orange-50 rounded-lg p-3 mb-3 border border-orange-100">
+                                            <p className="text-xs text-orange-600">
+                                                📌 ข้อมูลที่บันทึกไว้: น้ำหนักเป้าหมาย <strong>{savedData.target_weight} kg</strong>
+                                                {savedData.target_bmi && <span> (BMI {savedData.target_bmi})</span>}
+                                            </p>
+                                        </div>
+                                    )}
                                     <div className="mb-4">
                                         <label className="block text-sm text-gray-500 mb-1.5">น้ำหนักเป้าหมาย</label>
                                         <div className="relative">
