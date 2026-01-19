@@ -119,15 +119,12 @@
               const profile = await liff.getProfile();
               setUserId(profile.userId);
             } else {
-              // For development, use a test ID
-              setUserId('test_user_' + Date.now());
-              // In production, uncomment: liff.login();
+              // Redirect to LINE login
+              liff.login();
             }
           } catch (error) {
             console.error('LIFF initialization failed:', error);
-            // For development, set a test user ID
-            setUserId('test_user_' + Date.now());
-            setIsLiffReady(true);
+            alert('ไม่สามารถเชื่อมต่อกับ LINE ได้ กรุณาลองใหม่อีกครั้ง');
           }
         };
         initLiff();

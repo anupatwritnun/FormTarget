@@ -33,6 +33,7 @@ const GoalSettingForm = () => {
                 }
             } catch (error) {
                 console.error('LIFF initialization failed:', error);
+                alert('ไม่สามารถเชื่อมต่อกับ LINE ได้ กรุณาลองใหม่อีกครั้ง');
             }
         };
         initLiff();
