@@ -550,6 +550,16 @@ const GoalSettingForm = () => {
                                         <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
                                         ค่าปัจจุบันของคุณ
                                     </p>
+                                    {(savedData?.weight > 0 || savedData?.height > 0 || savedData?.bmi > 0) && (
+                                        <div className="bg-blue-50 rounded-lg p-3 mb-3 border border-blue-100">
+                                            <p className="text-xs text-blue-600">
+                                                📌 ข้อมูลที่บันทึกไว้:
+                                                {savedData.weight > 0 && <span> น้ำหนัก <strong>{savedData.weight} kg</strong></span>}
+                                                {savedData.height > 0 && <span> | ส่วนสูง <strong>{savedData.height} cm</strong></span>}
+                                                {savedData.bmi > 0 && <span> | BMI <strong>{savedData.bmi}</strong></span>}
+                                            </p>
+                                        </div>
+                                    )}
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="block text-sm text-gray-500 mb-1.5">น้ำหนักปัจจุบัน</label>
@@ -711,8 +721,8 @@ const GoalSettingForm = () => {
                         เป้าหมายสามารถปรับเปลี่ยนได้ภายหลัง
                     </p>
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 
