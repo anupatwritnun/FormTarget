@@ -115,6 +115,7 @@
       // Loading and saved data states
       const [isLoading, setIsLoading] = useState(false);
       const [savedData, setSavedData] = useState(null);
+      const [submittedData, setSubmittedData] = useState(null);
 
       // Initialize LIFF and get user profile
       useEffect(() => {
@@ -164,13 +165,15 @@
               if (data.bp_diastolic_target) {
                 setBpDia(String(data.bp_diastolic_target));
               }
-              if (data.current_weight) {
-                setCurrentWeight(String(data.current_weight));
+              // n8n returns 'weight' and 'bmi' for current values
+              if (data.weight && data.weight > 0) {
+                setCurrentWeight(String(data.weight));
               }
-              if (data.current_height) {
-                setCurrentHeight(String(data.current_height));
+              if (data.height && data.height > 0) {
+                setCurrentHeight(String(data.height));
               }
-              if (data.target_weight) {
+              // Only set target weight if it's greater than 0
+              if (data.target_weight && data.target_weight > 0) {
                 setTargetWeight(String(data.target_weight));
                 setIsBodyExpanded(true); // Expand body section if there's data
               }
@@ -271,8 +274,9 @@
           });
 
           if (response.ok) {
+            setSubmittedData(payload); // Save what was submitted
             setSubmitStatus('success');
-            // Close LIFF window after success (1 second delay to show success message)
+            // Close LIFF window after success (3 seconds to show confirmation)
             setTimeout(() => {
               if (liff.isInClient()) {
                 liff.closeWindow();
@@ -280,7 +284,7 @@
                 // Fallback for external browser
                 window.close();
               }
-            }, 1000);
+            }, 3000);
           } else {
             setSubmitStatus('error');
           }
@@ -310,6 +314,83 @@
               </svg>
               <span className="text-gray-600 font-medium">กำลังโหลดข้อมูล...</span>
             </div>
+          </div>
+        );
+      }
+
+      // Show success confirmation screen with summary
+      if (submitStatus === 'success' && submittedData) {
+        return (
+          <div className="min-h-screen bg-[#FFF8F0] flex flex-col items-center justify-center px-6">
+            {/* Success Icon */}
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">บันทึกสำเร็จ! ✨</h2>
+            <p className="text-gray-500 text-sm mb-6">เป้าหมายของคุณถูกบันทึกเรียบร้อยแล้ว</p>
+
+            {/* Summary Card */}
+            <div className="bg-white rounded-2xl shadow-lg p-5 w-full max-w-sm">
+              <h3 className="text-sm font-medium text-gray-600 mb-4 text-center">📋 สรุปเป้าหมาย</h3>
+
+              {/* BP Target */}
+              <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">❤️</span>
+                  <span className="text-gray-600">ความดันโลหิต</span>
+                </div>
+                <span className="font-semibold text-orange-600">
+                  {submittedData.bp_systolic_target}/{submittedData.bp_diastolic_target} mmHg
+                </span>
+              </div>
+
+              {/* Current Weight */}
+              {submittedData.current_weight > 0 && (
+                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">⚖️</span>
+                    <span className="text-gray-600">น้ำหนักปัจจุบัน</span>
+                  </div>
+                  <span className="font-semibold text-blue-600">
+                    {submittedData.current_weight} kg
+                  </span>
+                </div>
+              )}
+
+              {/* Target Weight */}
+              {submittedData.target_weight > 0 && (
+                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🎯</span>
+                    <span className="text-gray-600">น้ำหนักเป้าหมาย</span>
+                  </div>
+                  <span className="font-semibold text-orange-600">
+                    {submittedData.target_weight} kg
+                  </span>
+                </div>
+              )}
+
+              {/* Target BMI */}
+              {submittedData.target_bmi > 0 && (
+                <div className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">📊</span>
+                    <span className="text-gray-600">BMI เป้าหมาย</span>
+                  </div>
+                  <span className="font-semibold text-green-600">
+                    {submittedData.target_bmi}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Auto close message */}
+            <p className="text-gray-400 text-xs mt-6">
+              หน้าต่างจะปิดอัตโนมัติใน 3 วินาที...
+            </p>
           </div>
         );
       }
