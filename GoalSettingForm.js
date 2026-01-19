@@ -1,0 +1,456 @@
+import React, { useState, useEffect } from 'react';
+import liff from '@line/liff';
+
+// Placeholder for n8n webhook URL
+const N8N_WEBHOOK_URL = 'https://n8n.srv1159869.hstgr.cloud/webhook/target';
+
+// Mascot image - update to your actual path
+const MASCOT_IMAGE_URL = './Nurse.png';
+
+const GoalSettingForm = () => {
+    // State Management
+    const [userId, setUserId] = useState('');
+    const [goalSource, setGoalSource] = useState('standard'); // 'standard' or 'doctor'
+    const [bpSys, setBpSys] = useState('135');
+    const [bpDia, setBpDia] = useState('85');
+    const [weight, setWeight] = useState('');
+    const [height, setHeight] = useState('');
+    const [bmi, setBmi] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitStatus, setSubmitStatus] = useState(null);
+    const [isBodyExpanded, setIsBodyExpanded] = useState(false);
+
+    // Initialize LIFF and get user profile
+    useEffect(() => {
+        const initLiff = async () => {
+            try {
+                await liff.init({ liffId: 'YOUR_LIFF_ID' }); // Replace with your LIFF ID
+                if (liff.isLoggedIn()) {
+                    const profile = await liff.getProfile();
+                    setUserId(profile.userId);
+                } else {
+                    liff.login();
+                }
+            } catch (error) {
+                console.error('LIFF initialization failed:', error);
+            }
+        };
+        initLiff();
+    }, []);
+
+    // Handle goal source selection
+    const handleGoalSourceChange = (source) => {
+        setGoalSource(source);
+        if (source === 'standard') {
+            setBpSys('135');
+            setBpDia('85');
+        } else {
+            setBpSys('');
+            setBpDia('');
+        }
+    };
+
+    // Auto-calculate BMI when weight or height changes
+    useEffect(() => {
+        if (weight && height) {
+            const weightNum = parseFloat(weight);
+            const heightNum = parseFloat(height);
+            if (weightNum > 0 && heightNum > 0) {
+                const heightInMeters = heightNum / 100;
+                const calculatedBmi = weightNum / (heightInMeters * heightInMeters);
+                setBmi(calculatedBmi.toFixed(1));
+            } else {
+                setBmi(null);
+            }
+        } else {
+            setBmi(null);
+        }
+    }, [weight, height]);
+
+    // Get BMI status and color
+    const getBmiStatus = (bmiValue) => {
+        const bmiNum = parseFloat(bmiValue);
+        if (bmiNum < 18.5) return { status: 'น้ำหนักต่ำกว่าเกณฑ์', color: 'text-blue-500', bgColor: 'bg-blue-50' };
+        if (bmiNum < 23) return { status: 'ปกติ', color: 'text-green-500', bgColor: 'bg-green-50' };
+        if (bmiNum < 25) return { status: 'น้ำหนักเกิน', color: 'text-yellow-500', bgColor: 'bg-yellow-50' };
+        if (bmiNum < 30) return { status: 'อ้วน', color: 'text-orange-500', bgColor: 'bg-orange-50' };
+        return { status: 'อ้วนมาก', color: 'text-red-500', bgColor: 'bg-red-50' };
+    };
+
+    // Handle form submission
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        setSubmitStatus(null);
+
+        const payload = {
+            userId: userId,
+            goal_source: goalSource,
+            bp_systolic_target: parseInt(bpSys) || 0,
+            bp_diastolic_target: parseInt(bpDia) || 0,
+            target_weight: parseFloat(weight) || 0,
+            target_bmi: parseFloat(bmi) || 0
+        };
+
+        try {
+            const response = await fetch(N8N_WEBHOOK_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                setSubmitStatus('success');
+            } else {
+                setSubmitStatus('error');
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            setSubmitStatus('error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-[#FFF8F0] font-['Kanit',sans-serif]">
+            {/* Google Font Import */}
+            <style>
+                {`
+          @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+          
+          * {
+            font-family: 'Kanit', sans-serif;
+          }
+          
+          input[type="number"]::-webkit-inner-spin-button,
+          input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+          }
+          
+          input[type="number"] {
+            -moz-appearance: textfield;
+          }
+
+          .goal-card {
+            transition: all 0.2s ease;
+          }
+
+          .goal-card:hover {
+            transform: translateY(-2px);
+          }
+
+          .goal-card.selected {
+            border-color: #f97316;
+            background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
+          }
+
+          .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+          }
+
+          .collapsible-content.expanded {
+            max-height: 500px;
+          }
+        `}
+            </style>
+
+            {/* Header with Orange Gradient */}
+            <div className="relative">
+                <div
+                    className="h-36 rounded-b-[2rem]"
+                    style={{
+                        background: 'linear-gradient(135deg, #FF9800 0%, #FF6B35 50%, #F57C00 100%)'
+                    }}
+                >
+                    <div className="flex items-center justify-center pt-8">
+                        <h1 className="text-white text-2xl font-semibold tracking-wide drop-shadow-md">
+                            ตั้งเป้าหมายสุขภาพ
+                        </h1>
+                    </div>
+                </div>
+
+                {/* Floating Mascot Container */}
+                <div className="absolute left-1/2 -translate-x-1/2 -bottom-12">
+                    <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center overflow-hidden border-4 border-white">
+                        <img
+                            src={MASCOT_IMAGE_URL}
+                            alt="Pla-Thong Mascot"
+                            className="w-20 h-20 object-contain"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="px-4 pt-16 pb-8">
+                <form onSubmit={handleSubmit} className="space-y-5">
+
+                    {/* Goal Source Selection */}
+                    <div className="bg-white rounded-2xl shadow-md p-5">
+                        <h2 className="text-lg font-medium text-gray-800 mb-4 text-center">
+                            คุณต้องการตั้งเป้าหมายจากอะไร?
+                        </h2>
+
+                        <div className="space-y-3">
+                            {/* Option 1: Medical Standard */}
+                            <div
+                                onClick={() => handleGoalSourceChange('standard')}
+                                className={`goal-card p-4 rounded-xl border-2 cursor-pointer ${goalSource === 'standard'
+                                        ? 'selected border-orange-400'
+                                        : 'border-gray-200 bg-white hover:border-gray-300'
+                                    }`}
+                            >
+                                <div className="flex items-start gap-3">
+                                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 text-xl">
+                                        📊
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-medium text-gray-800">ค่ามาตรฐานทั่วไป</span>
+                                            {goalSource === 'standard' && (
+                                                <span className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                                                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            สำหรับคนทั่วไป อ้างอิงคำแนะนำทางการแพทย์ที่ &lt; 135/85 mmHg
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Option 2: Doctor's Order */}
+                            <div
+                                onClick={() => handleGoalSourceChange('doctor')}
+                                className={`goal-card p-4 rounded-xl border-2 cursor-pointer ${goalSource === 'doctor'
+                                        ? 'selected border-orange-400'
+                                        : 'border-gray-200 bg-white hover:border-gray-300'
+                                    }`}
+                            >
+                                <div className="flex items-start gap-3">
+                                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 text-xl">
+                                        👨‍⚕️
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-medium text-gray-800">ตามแพทย์สั่ง</span>
+                                            {goalSource === 'doctor' && (
+                                                <span className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                                                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            เลือกข้อนี้ถ้าคุณหมอกำหนดค่าเฉพาะให้คุณ (เช่น ผู้ป่วยโรคไต/เบาหวาน)
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Blood Pressure Section */}
+                    <div className="bg-white rounded-2xl shadow-md p-5">
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                                <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </div>
+                            <h2 className="text-lg font-medium text-gray-800">เป้าหมายความดันโลหิต</h2>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-sm text-gray-500 mb-1.5">ตัวบน (Systolic)</label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        value={bpSys}
+                                        onChange={(e) => setBpSys(e.target.value)}
+                                        placeholder="135"
+                                        disabled={goalSource === 'standard'}
+                                        className={`w-full px-4 py-3 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-300 transition-all ${goalSource === 'standard'
+                                                ? 'bg-orange-50 text-orange-600 font-medium'
+                                                : 'bg-gray-100 focus:bg-white'
+                                            }`}
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">mmHg</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm text-gray-500 mb-1.5">ตัวล่าง (Diastolic)</label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        value={bpDia}
+                                        onChange={(e) => setBpDia(e.target.value)}
+                                        placeholder="85"
+                                        disabled={goalSource === 'standard'}
+                                        className={`w-full px-4 py-3 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-300 transition-all ${goalSource === 'standard'
+                                                ? 'bg-orange-50 text-orange-600 font-medium'
+                                                : 'bg-gray-100 focus:bg-white'
+                                            }`}
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">mmHg</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {goalSource === 'standard' && (
+                            <p className="text-xs text-gray-400 mt-3 text-center">
+                                ✨ ค่ามาตรฐานถูกกำหนดให้อัตโนมัติ
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Body Composition Section - Collapsible */}
+                    <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+                        <button
+                            type="button"
+                            onClick={() => setIsBodyExpanded(!isBodyExpanded)}
+                            className="w-full p-5 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                        >
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </div>
+                                <h2 className="text-lg font-medium text-gray-800">เป้าหมายร่างกาย</h2>
+                                <span className="text-xs text-gray-400 ml-1">(ไม่บังคับ)</span>
+                            </div>
+                            <svg
+                                className={`w-5 h-5 text-gray-400 transition-transform ${isBodyExpanded ? 'rotate-180' : ''}`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <div className={`collapsible-content ${isBodyExpanded ? 'expanded' : ''}`}>
+                            <div className="px-5 pb-5">
+                                <div className="grid grid-cols-2 gap-3 mb-4">
+                                    <div>
+                                        <label className="block text-sm text-gray-500 mb-1.5">น้ำหนัก</label>
+                                        <div className="relative">
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                value={weight}
+                                                onChange={(e) => setWeight(e.target.value)}
+                                                placeholder="65"
+                                                className="w-full px-4 py-3 bg-gray-100 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:bg-white transition-all"
+                                            />
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">kg</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm text-gray-500 mb-1.5">ส่วนสูง</label>
+                                        <div className="relative">
+                                            <input
+                                                type="number"
+                                                value={height}
+                                                onChange={(e) => setHeight(e.target.value)}
+                                                placeholder="170"
+                                                className="w-full px-4 py-3 bg-gray-100 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:bg-white transition-all"
+                                            />
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">cm</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* BMI Display */}
+                                <div className={`rounded-xl p-4 ${bmi ? getBmiStatus(bmi).bgColor : 'bg-gray-50'} transition-colors duration-300`}>
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm text-gray-500 mb-1">ดัชนีมวลกาย (BMI)</p>
+                                            <div className="flex items-baseline gap-2">
+                                                <span className={`text-3xl font-semibold transition-colors ${bmi ? getBmiStatus(bmi).color : 'text-gray-400'}`}>
+                                                    {bmi || '--'}
+                                                </span>
+                                                <span className="text-gray-400 text-sm">kg/m²</span>
+                                            </div>
+                                        </div>
+                                        {bmi && (
+                                            <div className={`px-3 py-1.5 rounded-full ${getBmiStatus(bmi).bgColor}`}>
+                                                <span className={`text-sm font-medium ${getBmiStatus(bmi).color}`}>
+                                                    {getBmiStatus(bmi).status}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Submit Status Messages */}
+                    {submitStatus === 'success' && (
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <p className="text-green-700 font-medium">บันทึกเป้าหมายสำเร็จ!</p>
+                        </div>
+                    )}
+
+                    {submitStatus === 'error' && (
+                        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+                            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </div>
+                            <p className="text-red-700 font-medium">เกิดข้อผิดพลาด กรุณาลองใหม่</p>
+                        </div>
+                    )}
+
+                    {/* Submit Button */}
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className={`w-full py-4 rounded-xl text-white font-medium text-lg shadow-lg transition-all duration-200 ${isSubmitting
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 active:scale-[0.98] hover:shadow-xl'
+                            }`}
+                    >
+                        {isSubmitting ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                กำลังบันทึก...
+                            </span>
+                        ) : (
+                            'บันทึกเป้าหมาย'
+                        )}
+                    </button>
+
+                    {/* Footer Note */}
+                    <p className="text-center text-sm text-gray-400 mt-4">
+                        เป้าหมายสามารถปรับเปลี่ยนได้ภายหลัง
+                    </p>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+export default GoalSettingForm;
