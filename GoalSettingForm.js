@@ -190,7 +190,7 @@ const GoalSettingForm = () => {
                         // Fallback for external browser
                         window.close();
                     }
-                }, 3000);
+                }, 6000);
             } else {
                 setSubmitStatus('error');
             }
@@ -327,7 +327,7 @@ const GoalSettingForm = () => {
 
                 {/* Auto close message */}
                 <p className="text-gray-400 text-xs mt-6">
-                    หน้าต่างจะปิดอัตโนมัติใน 3 วินาที...
+                    หน้าต่างจะปิดอัตโนมัติใน 6 วินาที...
                 </p>
             </div>
         );
