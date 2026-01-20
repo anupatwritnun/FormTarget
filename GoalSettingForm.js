@@ -576,13 +576,11 @@ const GoalSettingForm = () => {
                                         <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
                                         ค่าปัจจุบันของคุณ
                                     </p>
-                                    {(savedData?.weight > 0 || savedData?.height > 0 || savedData?.bmi > 0) && (
+                                    {(savedData?.weight || savedData?.height) && (
                                         <div className="bg-blue-50 rounded-lg p-3 mb-3 border border-blue-100">
                                             <p className="text-xs text-blue-600">
-                                                📌 ข้อมูลที่บันทึกไว้:
-                                                {savedData.weight > 0 && <span> น้ำหนัก <strong>{savedData.weight} kg</strong></span>}
-                                                {savedData.height > 0 && <span> | ส่วนสูง <strong>{savedData.height} cm</strong></span>}
-                                                {savedData.bmi > 0 && <span> | BMI <strong>{savedData.bmi}</strong></span>}
+                                                📌 ข้อมูลที่บันทึกไว้: น้ำหนัก <strong>{savedData.weight} kg</strong> | ส่วนสูง <strong>{savedData.height} cm</strong>
+                                                {savedData.bmi && <span> (BMI {savedData.bmi})</span>}
                                             </p>
                                         </div>
                                     )}
