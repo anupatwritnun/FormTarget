@@ -272,6 +272,32 @@ const GoalSettingForm = () => {
                         </div>
                     )}
 
+                    {/* Current Height */}
+                    {submittedData.current_height > 0 && (
+                        <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                            <div className="flex items-center gap-2">
+                                <span className="text-lg">📏</span>
+                                <span className="text-gray-600">ส่วนสูงปัจจุบัน</span>
+                            </div>
+                            <span className="font-semibold text-blue-600">
+                                {submittedData.current_height} cm
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Current BMI */}
+                    {submittedData.current_bmi > 0 && (
+                        <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                            <div className="flex items-center gap-2">
+                                <span className="text-lg">📊</span>
+                                <span className="text-gray-600">BMI ปัจจุบัน</span>
+                            </div>
+                            <span className="font-semibold text-blue-600">
+                                {submittedData.current_bmi}
+                            </span>
+                        </div>
+                    )}
+
                     {/* Target Weight */}
                     {submittedData.target_weight > 0 && (
                         <div className="flex items-center justify-between py-3 border-b border-gray-100">
